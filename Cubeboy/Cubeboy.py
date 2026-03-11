@@ -353,19 +353,33 @@ class App:
                 if is_edge and not is_exit:
                     tm.pset(x, y, (1, 0))
 
-        # Random platforms
-        for _ in range(8):
-            px = random.randint(1, (W // TILE_SIZE) - 4)
-            py = random.randint(1, (H // TILE_SIZE) - 2)
-            # SAFETY: Skip platforms that block the middle spawn/path areas
-            # Exit holes are at tiles 6-9. Protecting 5-10 range.
-            if 5 <= px <= 10 or 5 <= py <= 10:
-                continue
-            
-            pw = random.randint(2, 4)
-            for i in range(pw):
-                if 0 < px + i < 15:
-                    tm.pset(px + i, py, (1, 0))
+        # Grid-based platform generation (4x4 sectors)
+        density = random.uniform(0.2, 0.5)
+        for gy in range(1, 4):
+            for gx in range(1, 4):
+                if random.random() < density: # Variable density per room
+                    px = gx * 4 + random.randint(-1, 0)
+                    py = gy * 4 + random.randint(-1, 0)
+                    
+                    type = random.randint(0, 2) # Reduced types
+                    size = random.randint(1, 2) # Smaller size
+                    
+                    if type == 0: # Horizontal
+                        for i in range(size):
+                            if 0 < px + i < 15: tm.pset(px + i, py, (1, 0))
+                    elif type == 1: # Vertical
+                        for i in range(size):
+                            if 0 < py + i < 15: tm.pset(px, py + i, (1, 0))
+                    else: # Island
+                        tm.pset(px, py, (1, 0))
+
+        # FINAL PASS: Ensure exits are ALWAYS clear
+        # Middle 4 tiles on each edge
+        for i in range(5, 11):
+            tm.pset(i, 0, (0, 0)) # Top
+            tm.pset(i, 15, (0, 0)) # Bottom
+            tm.pset(0, i, (0, 0)) # Left
+            tm.pset(15, i, (0, 0)) # Right
 
         # Room-specific orbs
         if (rx, ry) not in self.rooms_data:
