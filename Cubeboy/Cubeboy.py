@@ -353,21 +353,26 @@ class App:
                 if is_edge and not is_exit:
                     tm.pset(x, y, (1, 0))
 
-        # Grid-based platform generation (4x4 sectors)
-        density = random.uniform(0.2, 0.5)
-        for gy in range(1, 4):
-            for gx in range(1, 4):
-                if random.random() < density: # Variable density per room
-                    px = gx * 4 + random.randint(-1, 0)
-                    py = gy * 4 + random.randint(-1, 0)
+        # Grid-based platform generation (4x4 internal sectors = 16 slots)
+        density = random.uniform(0.4, 0.7)
+        for gy in range(1, 5):
+            for gx in range(1, 5):
+                if random.random() < density:
+                    px = gx * 3 + random.randint(-1, 0)
+                    py = gy * 3 + random.randint(-1, 0)
                     
-                    type = random.randint(0, 2) # Reduced types
-                    size = random.randint(1, 2) # Smaller size
+                    type = random.randint(0, 3)
+                    size = random.randint(2, 3) 
                     
                     if type == 0: # Horizontal
                         for i in range(size):
                             if 0 < px + i < 15: tm.pset(px + i, py, (1, 0))
                     elif type == 1: # Vertical
+                        for i in range(size):
+                            if 0 < py + i < 15: tm.pset(px, py + i, (1, 0))
+                    elif type == 2: # L-Shape
+                        for i in range(size):
+                            if 0 < px + i < 15: tm.pset(px + i, py, (1, 0))
                         for i in range(size):
                             if 0 < py + i < 15: tm.pset(px, py + i, (1, 0))
                     else: # Island
