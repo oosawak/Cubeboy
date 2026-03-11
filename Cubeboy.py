@@ -67,18 +67,33 @@ class Player:
         return dx, dy
 
     def is_wall(self, x, y):
-        x1 = int(x) // 8
-        y1 = int(y) // 8
-        x2 = int(x + self.width - 0.1) // 8
-        y2 = int(y + self.height - 0.1) // 8
+        # Use floor division to handle negative coordinates properly
+        x1 = int(x // 8)
+        y1 = int(y // 8)
+        x2 = int((x + self.width - 0.05) // 8)
+        y2 = int((y + self.height - 0.05) // 8)
         
         for ty in range(y1, y2 + 1):
             for tx in range(x1, x2 + 1):
-                if pyxel.tilemaps[0].pget(tx, ty) == (1, 0):
-                    return True
+                # Bounds check for safety
+                if 0 <= tx < 16 and 0 <= ty < 16:
+                    if pyxel.tilemaps[0].pget(tx, ty) == (1, 0):
+                        return True
         return False
 
+    def resolve_overlap(self):
+        # Emergency push-out if stuck
+        if self.is_wall(self.x, self.y):
+            for i in range(1, 9):
+                for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+                    if not self.is_wall(self.x + dx * i, self.y + dy * i):
+                        self.x += dx * i
+                        self.y += dy * i
+                        return
+                    
     def update(self, particles):
+        # Ensure we stay out of walls before moving
+        self.resolve_overlap()
         # Timers
         if self.coyote_timer > 0: self.coyote_timer -= 1
         if self.jump_buffer > 0: self.jump_buffer -= 1
@@ -356,24 +371,24 @@ class App:
         self.player.update(self.particles)
         
         # Screen Transitions
-        margin = 2
+        margin = 4
         changed = False
         if self.player.x < -margin:
             self.room_x -= 1
-            self.player.x = W - self.player.width - margin
+            self.player.x = W - self.player.width - 2
             changed = True
         elif self.player.x > W - self.player.width + margin:
             self.room_x += 1
-            self.player.x = margin
+            self.player.x = 2
             changed = True
         
         if self.player.y < -margin:
             self.room_y -= 1
-            self.player.y = H - self.player.height - margin
+            self.player.y = H - self.player.height - 2
             changed = True
         elif self.player.y > H + margin:
             self.room_y += 1
-            self.player.y = margin
+            self.player.y = 2
             changed = True
             
         if changed:
