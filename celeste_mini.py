@@ -55,12 +55,12 @@ class Player:
 
     def get_input(self):
         dx = 0
-        if pyxel.btn(pyxel.KEY_LEFT): dx -= 1
-        if pyxel.btn(pyxel.KEY_RIGHT): dx += 1
+        if pyxel.btn(pyxel.KEY_LEFT) or pyxel.btn(pyxel.KEY_A) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_LEFT): dx -= 1
+        if pyxel.btn(pyxel.KEY_RIGHT) or pyxel.btn(pyxel.KEY_D) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_RIGHT): dx += 1
         
         dy = 0
-        if pyxel.btn(pyxel.KEY_UP): dy -= 1
-        if pyxel.btn(pyxel.KEY_DOWN): dy += 1
+        if pyxel.btn(pyxel.KEY_UP) or pyxel.btn(pyxel.KEY_W) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_UP): dy -= 1
+        if pyxel.btn(pyxel.KEY_DOWN) or pyxel.btn(pyxel.KEY_S) or pyxel.btn(pyxel.GAMEPAD1_BUTTON_DPAD_DOWN): dy += 1
         
         return dx, dy
 
@@ -99,7 +99,8 @@ class Player:
                 self.vy += grav
             
             # Jump Input Buffer
-            if pyxel.btnp(pyxel.KEY_SPACE) or pyxel.btnp(pyxel.KEY_C):
+            if (pyxel.btnp(pyxel.KEY_SPACE) or pyxel.btnp(pyxel.KEY_Z) or 
+                pyxel.btnp(pyxel.KEY_C) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_A)):
                 self.jump_buffer = 4
             
             # Jump Logic
@@ -120,7 +121,8 @@ class Player:
                     pyxel.play(3, 0) # Jump sound
             
             # Dash Input
-            if pyxel.btnp(pyxel.KEY_X) and self.can_dash:
+            if (pyxel.btnp(pyxel.KEY_X) or pyxel.btnp(pyxel.KEY_V) or 
+                pyxel.btnp(pyxel.GAMEPAD1_BUTTON_X) or pyxel.btnp(pyxel.GAMEPAD1_BUTTON_B)) and self.can_dash:
                 idx, idy = self.get_input()
                 if idx == 0 and idy == 0: idx = self.facing
                 
@@ -245,6 +247,7 @@ class App:
         self.particles = []
         self.shake = 0
         self.player = Player(W // 2, H // 2)
+        self.started = False # Wait for first click to start BGM/Logic
         
         self.generate_room(0, 0)
         
@@ -290,6 +293,17 @@ class App:
         random.setstate(state)
 
     def update(self):
+        if not self.started:
+            if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT) or pyxel.btnp(pyxel.KEY_SPACE) or \
+               pyxel.btnp(pyxel.GAMEPAD1_BUTTON_START):
+                self.started = True
+                # BGM Start (Web environments need a click)
+                try:
+                    pyxel.play(0, 63, loop=True)
+                except:
+                    pass
+            return
+
         if pyxel.btnp(pyxel.KEY_Q):
             pyxel.quit()
             
@@ -337,6 +351,10 @@ class App:
 
     def draw(self):
         pyxel.cls(COLOR_BG)
+        
+        if not self.started:
+            pyxel.text(40, 60, "CLICK TO START", pyxel.frame_count % 16)
+            return
         
         cam_x, cam_y = 0.0, 0.0
         if self.shake > 0:
