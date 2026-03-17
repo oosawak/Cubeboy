@@ -771,10 +771,10 @@ class App:
         if self.state == STATE_BOSS:
             if self.boss_countdown > 0:
                 sec = self.boss_countdown // 30
-                # Move to bottom: y=116 for text, y=122 for bar
-                pyxel.text(40, 116, f"BOSS IN: {sec}s", 8)
-                pyxel.rect(W//2-20, 122, 40 * (self.boss_countdown/300), 2, 8)
+                # Right-aligned at bottom: x=80 for text, x=80 for bar (40px wide)
+                pyxel.text(80, 116, f"BOSS IN: {sec}s", 8)
+                pyxel.rect(80, 122, 40 * (self.boss_countdown/300), 2, 8)
             else:
-                pyxel.text(40, 120, "WARNING: BOSS ACTIVE!", 8)
+                pyxel.text(76, 120, "WARNING: BOSS ACTIVE!", 8)
 
 App()
